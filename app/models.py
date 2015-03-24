@@ -1,6 +1,8 @@
 # coding=utf-8
 import datetime
 
+from werkzeug.security import generate_password_hash, check_password_hash
+
 from . import db
 
 
@@ -16,3 +18,14 @@ class User(db.Model):
     bio = db.Column(db.Text())
     member_since = db.Column(db.DateTime(), default=datetime.datetime.utcnow)
     avatar_hash = db.Column(db.String(32))
+
+    @property
+    def password(self):
+        return AttributeError('password is not a readable attribute')
+
+    @password.setter
+    def password(self, value):
+        self.password_hash = generate_password_hash(value)
+
+    def verify_password(self, password):
+        return check_password_hash(self.password_hash, password)
