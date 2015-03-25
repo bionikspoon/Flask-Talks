@@ -31,5 +31,13 @@ def adduser(email, username, admin=False):
     print 'User {} was registered successfully.'.format(username)
 
 
+@manager.command
+def migrate():
+    """Migrate database."""
+
+    db.create_all()
+    print 'Database migrated successfully.'
+
+
 if __name__ == '__main__':
     manager.run()
