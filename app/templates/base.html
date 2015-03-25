@@ -1,4 +1,5 @@
 {% extends 'bootstrap/base.html' %}
+{% import 'bootstrap/utils.html' as utils %}
 
 {% block title %}Talks{% endblock %}
 
@@ -52,12 +53,7 @@
 
 {% block content %}
 <div class="container">
-    {% for message in get_flashed_messages() %}
-    <div class="alert alert-warning">
-        <button type="button" data-dismiss="alert" class="close">&times;</button>
-        {{ message }}
-        </div>
-    {% endfor %}
+    {{ utils.flashed_messages(container=False) }}
     {%  block page_content %}{% endblock %}
 </div>
 {% endblock %}
