@@ -1,12 +1,15 @@
 # coding=utf-8
-import datetime
+import hashlib
+from datetime import datetime
 
+from flask import request
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask.ext.login import UserMixin
 
-from . import db
+from . import db, login_manager
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(64), nullable=False, unique=True, index=True)
@@ -16,16 +19,40 @@ class User(db.Model):
     name = db.Column(db.String(64))
     location = db.Column(db.String(64))
     bio = db.Column(db.Text())
-    member_since = db.Column(db.DateTime(), default=datetime.datetime.utcnow)
+    member_since = db.Column(db.DateTime(), default=datetime.utcnow)
     avatar_hash = db.Column(db.String(32))
+
+    def __init__(self, **kwargs):
+        # noinspection PyArgumentList
+        super(User, self).__init__(**kwargs)
+        if self.email is not None and self.avatar_hash is None:
+            self.avatar_hash = hashlib.md5(
+                self.email.encode('utf-8')).hexdigest()
 
     @property
     def password(self):
-        return AttributeError('password is not a readable attribute')
+        raise AttributeError('password is not a readable attribute')
 
     @password.setter
-    def password(self, value):
-        self.password_hash = generate_password_hash(value)
+    def password(self, password):
+        self.password_hash = generate_password_hash(password)
 
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def gravatar(self, size=100, default='identicon', rating='g'):
+        if request.is_secure:
+            url = 'https://secure.gravatar.com/avatar'
+        else:
+            url = 'http://www.gravatar.com/avatar'
+
+        email_hash = self.avatar_hash or hashlib.md5(
+            self.email.encode('utf-8')).hexdigest()
+        url_template = '{gravatar_url}/{hash}?s={size}&d={default}&r={rating}'
+        return url_template.format(gravatar_url=url, hash=email_hash, size=size,
+                                   default=default, rating=rating)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))

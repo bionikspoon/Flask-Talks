@@ -1,6 +1,7 @@
 # coding=utf-8
 from flask import render_template
 from . import talks
+from ..models import User
 
 
 @talks.route('/')
@@ -10,4 +11,5 @@ def index():
 
 @talks.route('/user/<username>')
 def user(username):
-    return render_template('talks/user.html', username=username)
+    user_ = User.query.filter_by(username=username).first_or_404()
+    return render_template('talks/user.html', user=user_)

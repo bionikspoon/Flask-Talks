@@ -2,11 +2,15 @@
 from flask import Flask
 from flask.ext.bootstrap import Bootstrap
 from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.login import LoginManager
 
 from config import config
 
+
 bootstrap = Bootstrap()
 db = SQLAlchemy()
+login_manager = LoginManager()
+login_manager.login_view = 'auth.login'
 
 
 def create_app(config_name):
@@ -15,6 +19,7 @@ def create_app(config_name):
 
     bootstrap.init_app(app)
     db.init_app(app)
+    login_manager.init_app(app)
 
     from .talks import talks as talks_blueprint
     from .auth import auth as auth_blueprint
