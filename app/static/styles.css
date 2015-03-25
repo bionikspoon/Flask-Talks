@@ -7,3 +7,33 @@
     margin-right: 16px;
     margin-bottom: 16px;
 }
+
+ul.talk-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+li.talk {
+    border-bottom: 1px solid #eeeeee;
+    padding: 10px;
+}
+
+li.talk-hover {
+    background-color: #f8f8f8;
+}
+
+div.talk-header h2 {
+    font-size: 200%;
+    margin: 5px 0 15px 0;
+}
+
+div.talk-header h3 {
+    font-size: 115%;
+    margin: 0 0 10px 0;
+}
+
+div.talk-header p {
+    font-size: 90%;
+    font-style: italic;
+    margin: 20px 0 0 0;
+}

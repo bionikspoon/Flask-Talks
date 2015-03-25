@@ -10,13 +10,15 @@ from ..models import User, Talk
 
 @talks.route('/')
 def index():
-    return render_template('talks/index.html')
+    talk_list = Talk.query.order_by(Talk.date.desc()).all()
+    return render_template('talks/index.html', talks=talk_list)
 
 
 @talks.route('/user/<username>')
 def user(username):
     user_ = User.query.filter_by(username=username).first_or_404()
-    return render_template('talks/user.html', user=user_)
+    talk_list = user_.talks.order_by(Talk.date.desc()).all()
+    return render_template('talks/user.html', user=user_, talks=talk_list)
 
 
 @talks.route('/profile', methods=['GET', 'POST'])
