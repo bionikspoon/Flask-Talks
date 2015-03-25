@@ -55,3 +55,8 @@ def new_talk():
         flash('The talk was added successfully.', category='success')
         return redirect(url_for('.index'))
     return render_template('talks/edit_talk.html', form=form)
+
+@talks.route('/talk/<int:id>')
+def talk(id):
+    talk = Talk.query.get_or_404(id)
+    return render_template('talks/talk.html', talk=talk)
