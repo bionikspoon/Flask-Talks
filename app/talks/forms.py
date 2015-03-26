@@ -1,8 +1,9 @@
 # coding=utf-8
 from flask.ext.wtf import Form
-from wtforms import StringField, TextAreaField, SubmitField
+from flask.ext.pagedown.fields import PageDownField
+from wtforms import StringField, TextAreaField, SubmitField, BooleanField
 from wtforms.fields.html5 import DateField
-from wtforms.validators import Optional, Length, Required, URL
+from wtforms.validators import Optional, Length, Required, URL, Email
 
 
 class ProfileForm(Form):
@@ -40,3 +41,15 @@ class TalkForm(Form):
         talk.venue = self.venue.data
         talk.venue_url = self.venue_url.data
         talk.date = self.date.data
+
+
+class PresenterCommentForm(Form):
+    body = PageDownField('Comment', validators=[Required()])
+    submit = SubmitField('Submit')
+
+
+class CommentForm(PresenterCommentForm):
+    name = StringField('Name', validators=[Required(), Length(1, 64)])
+    email = StringField('Email',
+                        validators=[Required(), Length(1, 64), Email()])
+    notify = BooleanField('Notify when new comments are posted', default=True)

@@ -1,18 +1,38 @@
 {% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
 {%  block page_content %}
-<div class="page-header">
-    {% include 'talks/_talk_header.html' %}
-</div>
-<div class="talk-body">
-    {%  if talk.video %}
-    <div class="talk-video">
-        {{ talk.video | safe }}
+    <div class="page-header">
+        {% include 'talks/_talk_header.html' %}
     </div>
-    {% endif %}
-    {%  if talk.slides %}
-    <div class="talk-slides">
-        {{ talk.slides | safe }}
+    <div class="talk-body">
+        {%  if talk.video %}
+        <div class="talk-video">
+            {{ talk.video | safe }}
+        </div>
+        {% endif %}
+        {%  if talk.slides %}
+        <div class="talk-slides">
+            {{ talk.slides | safe }}
+        </div>
+        {% endif %}
     </div>
+    {% if comments %}
+        <h3 id="comments">Comments</h3>
+        {% include 'talks/_comments.html' %}
     {% endif %}
-</div>
+    <h3 id="comment-form">Write a comment</h3>
+    {{ wtf.quick_form(form, action='#comment-form') }}
+
+{% endblock %}
+
+{%  block scripts %}
+    {{ super() }}
+    {{ pagedown.include_pagedown() }}
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/autosize.js/1.18.1/jquery.autosize.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#flask-pagedown-body').autosize();
+        })
+    </script>
 {% endblock %}

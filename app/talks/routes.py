@@ -4,8 +4,8 @@ from flask.ext.login import login_required, current_user
 
 from . import talks
 from .. import db
-from .forms import ProfileForm, TalkForm
-from ..models import User, Talk
+from .forms import ProfileForm, TalkForm, PresenterCommentForm, CommentForm
+from ..models import User, Talk, Comment
 
 
 @talks.route('/')
@@ -56,12 +56,36 @@ def new_talk():
     return render_template('talks/edit_talk.html', form=form)
 
 
-@talks.route('/talk/<id>')
+@talks.route('/talk/<int:id>', methods=['GET', 'POST'])
 def talk(id):
     talk = Talk.query.get_or_404(id)
+    comment = None
+    if current_user.is_authenticated():
+        form = PresenterCommentForm()
+        if form.validate_on_submit():
+            comment = Comment(body=form.body.data, talk=talk,
+                              author=current_user, notify=False, approved=True)
+    else:
+        form = CommentForm()
+        if form.validate_on_submit():
+            comment = Comment(body=form.body.data, talk=talk,
+                              author_name=form.name.data,
+                              author_email=form.email.data,
+                              notify=form.notify.data, approved=False)
+    if comment:
+        db.session.add(comment)
+        db.session.commit()
+        if comment.approved:
+            flash('Your comment has been published', category='success')
+        else:
+            flash('Your comment will be published after '
+                  'it is review by the presenter.', category='info')
+        return redirect('{}#top'.format(url_for('.talk', id=talk.id)))
+    comments = talk.comments.order_by(Comment.timestamp.asc()).all()
     headers = {
         'X-XSS-Protection': '0'} if current_user.is_authenticated() else {}
-    return render_template('talks/talk.html', talk=talk), 200, headers
+    return render_template('talks/talk.html', talk=talk, form=form,
+                           comments=comments), 200, headers
 
 
 @talks.route('/edit/<int:id>', methods=['GET', 'POST'])
