@@ -100,9 +100,36 @@ class Talk(db.Model):
     venue_url = db.Column(db.String(128))
     date = db.Column(db.DateTime())
     comments = db.relationship('Comment', lazy='dynamic', backref='talk')
+    emails = db.relationship('PendingEmail', lazy='dynamic', backref='talk')
 
     def approved_comments(self):
         return self.comments.filter_by(approved=True)
+
+    def get_unsubscribe_token(self, email, expiration=604800):
+        s = Serializer(current_app.config['SECRET_KEY'], expiration)
+        return s.dumps(dict(talk=self.id, email=email)).decode('utf-8')
+
+    @staticmethod
+    def unsubscribe_user(token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        # noinspection PyBroadException
+        try:
+            data = s.loads(token)
+        except:
+            return None, None
+        # noinspection PyShadowingBuiltins
+        id = data.get('talk')
+        email = data.get('email')
+
+        if not id or not email:
+            return None, None
+        talk = Talk.query.get(id)
+        if not talk:
+            return None, None
+        Comment.query.filter_by(talk=talk).filter_by(author_email=email).update(
+            dict(notify=False))
+        db.session.commit()
+        return talk, email
 
 
 class Comment(db.Model):
@@ -132,5 +159,42 @@ class Comment(db.Model):
     def for_moderation():
         return Comment.query.filter(Comment.approved == 0)
 
+    def notification_list(self):
+        result = {}
+        for comment in self.talk.comments:
+            if comment.notify and comment.author != comment.talk.author:
+                if comment.author:
+                    if self.author != comment.author:
+                        author = comment.author.name or comment.author.username
+                        result[comment.author.email] = author
+                else:
+                    if not self.author_email == comment.author_email:
+                        result[comment.author.email] = comment.author_name
+        return result.items()
+
 
 db.event.listen(Comment.body, 'set', Comment.on_changed_body)
+
+
+class PendingEmail(db.Model):
+    __tablename_ = 'pending_emails'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64))
+    email = db.Column(db.String(64), index=True)
+    subject = db.Column(db.String(128))
+    body_text = db.Column(db.Text())
+    body_html = db.Column(db.Text())
+    talk_id = db.Column(db.Integer, db.ForeignKey('talks.id'))
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow())
+
+    @staticmethod
+    def already_in_queue(email, talk):
+        pending_email_count = PendingEmail.query.filter(
+            PendingEmail.talk_id == talk.id).filter(
+            PendingEmail.Email == email).count()
+
+        return pending_email_count > 0
+
+    @staticmethod
+    def remove(email):
+        PendingEmail.query.filter_by(email=email).delete()

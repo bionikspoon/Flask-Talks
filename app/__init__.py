@@ -5,6 +5,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import LoginManager
 from flask.ext.moment import Moment
 from flask.ext.pagedown import PageDown
+from flask.ext.mail import Mail
 
 from config import config
 
@@ -13,6 +14,7 @@ bootstrap = Bootstrap()
 db = SQLAlchemy()
 moment = Moment()
 pagedown = PageDown()
+mail = Mail()
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
@@ -27,6 +29,7 @@ def create_app(config_name):
 
     moment.init_app(app)
     pagedown.init_app(app)
+    mail.init_app(app)
     login_manager.init_app(app)
 
     from .talks import talks as talks_blueprint
@@ -40,5 +43,11 @@ def create_app(config_name):
     from .api_1_0 import api as api_blueprint
 
     app.register_blueprint(api_blueprint, url_prefix='/api/1.0')
+
+    from app.emails import start_email_thread
+
+    @app.before_first_request
+    def before_first_request():
+        start_email_thread()
 
     return app

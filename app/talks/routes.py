@@ -7,6 +7,7 @@ from . import talks
 from .. import db
 from .forms import ProfileForm, TalkForm, PresenterCommentForm, CommentForm
 from ..models import User, Talk, Comment
+from ..emails import send_author_notification, send_comment_notification
 
 
 @talks.route('/')
@@ -93,8 +94,10 @@ def talk(id):
         db.session.add(comment)
         db.session.commit()
         if comment.approved:
+            send_comment_notification(comment)
             flash('Your comment has been published', category='success')
         else:
+            send_author_notification(talk)
             flash('Your comment will be published after '
                   'it is review by the presenter.', category='info')
         return redirect('{}#top'.format(url_for('.talk', id=talk.id)))
@@ -154,3 +157,12 @@ def moderate_admin():
         abort(403)
     comments = Comment.for_moderation().order_by(Comment.timestamp.asc())
     return render_template('talks/moderate.html', comments=comments)
+
+
+@talks.route('/unsubscribe/<token>')
+def unsubscribe(token):
+    # noinspection PyShadowingNames
+    talk, email = Talk.unsubscribe_user(token)
+    if not talk or not email:
+        flash('Invalid ubsubscribe token.', category='danger')
+        return redirect('{}#top'.format(url_for('.talk', id=talk.id)))

@@ -5,6 +5,7 @@ from . import api
 from .errors import bad_request, forbidden
 from .. import db
 from ..models import Comment
+from ..emails import send_comment_notification
 
 
 # noinspection PyShadowingBuiltins
@@ -20,6 +21,7 @@ def approve_comment(id):
     comment.approved = True
     db.session.add(comment)
     db.session.commit()
+    send_comment_notification(comment)
     return jsonify(dict(status='ok'))
 
 
