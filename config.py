@@ -6,6 +6,8 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY')
+    TALKS_PER_PAGE = 50
+    COMMENTS_PER_PAGE = 100
 
 
 class DevelopmentConfig(Config):
@@ -14,6 +16,8 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         'DEV_DATABASE_URL') or 'sqlite:///{}'.format(
         os.path.join(basedir, 'data-dev.sqlite'))
+    TALKS_PER_PAGE = 2
+    COMMENTS_PER_PAGE = 2
 
 
 class TestingConfig(Config):
