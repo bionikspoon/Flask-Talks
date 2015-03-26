@@ -61,7 +61,7 @@ class User(UserMixin, db.Model):
         if admin and self.is_admin:
             return Comment.for_moderation()
         return Comment.query.join(Talk, Comment.talk_id == Talk.id).filter(
-            Talk.author == self).filter(Comment.approved is False)
+            Talk.author == self).filter(Comment.approved == 0)
 
     def get_api_token(self, expiration=300):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
@@ -162,14 +162,14 @@ class Comment(db.Model):
     def notification_list(self):
         result = {}
         for comment in self.talk.comments:
-            if comment.notify and comment.author != comment.talk.author:
+            if comment.notify and not comment.author == comment.talk.author:
                 if comment.author:
                     if self.author != comment.author:
                         author = comment.author.name or comment.author.username
                         result[comment.author.email] = author
                 else:
                     if not self.author_email == comment.author_email:
-                        result[comment.author.email] = comment.author_name
+                        result[comment.author_email] = comment.author_name
         return result.items()
 
 
@@ -177,7 +177,7 @@ db.event.listen(Comment.body, 'set', Comment.on_changed_body)
 
 
 class PendingEmail(db.Model):
-    __tablename_ = 'pending_emails'
+    __tablename__ = 'pending_emails'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
     email = db.Column(db.String(64), index=True)
@@ -185,13 +185,13 @@ class PendingEmail(db.Model):
     body_text = db.Column(db.Text())
     body_html = db.Column(db.Text())
     talk_id = db.Column(db.Integer, db.ForeignKey('talks.id'))
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow())
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
     @staticmethod
     def already_in_queue(email, talk):
         pending_email_count = PendingEmail.query.filter(
             PendingEmail.talk_id == talk.id).filter(
-            PendingEmail.Email == email).count()
+            PendingEmail.email == email).count()
 
         return pending_email_count > 0
 

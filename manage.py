@@ -46,5 +46,14 @@ def migrate():
     print 'Database migrated successfully.'
 
 
+@manager.command
+def test():
+    from subprocess import call
+
+    call(['nosetests', '-v', '--with-coverage', '--cover-package=app',
+          '--cover-branches', '--cover-erase', '--cover-html',
+          '--cover-html-dir=cover'])
+
+
 if __name__ == '__main__':
     manager.run()

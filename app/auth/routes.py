@@ -13,7 +13,7 @@ def login():
     unsecured_live = all((
         not current_app.config['DEBUG'], not current_app.config['TESTING'],
         not request.is_secure))
-    if unsecured_live:
+    if all(unsecured_live):
         return redirect(url_for('.login', _external=True, _scheme='https'))
     form = LoginForm()
     if form.validate_on_submit():

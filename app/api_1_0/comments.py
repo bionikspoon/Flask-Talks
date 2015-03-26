@@ -29,7 +29,7 @@ def approve_comment(id):
 @api.route('/comments/<int:id>', methods=['DELETE'])
 def delete_comment(id):
     comment = Comment.query.get_or_404(id)
-    if comment.talk.author != g.current_user and not g.current_user.is_admin:
+    if not comment.talk.author == g.current_user and not g.current_user.is_admin:
         return forbidden('You cannot modify this comment.')
     if comment.approved:
         return bad_request('Comment is already approved.')

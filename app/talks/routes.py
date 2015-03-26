@@ -6,7 +6,7 @@ from flask.ext.login import login_required, current_user
 from . import talks
 from .. import db
 from .forms import ProfileForm, TalkForm, PresenterCommentForm, CommentForm
-from ..models import User, Talk, Comment
+from ..models import User, Talk, Comment, PendingEmail
 from ..emails import send_author_notification, send_comment_notification
 
 
@@ -111,10 +111,10 @@ def talk(id):
 
     page = request.args.get('page', 1, type=int)
     per_page = current_app.config['COMMENTS_PER_PAGE']
-    ascending = Comment.timestamp.asc()
     pagination = (
-        comments_query.order_by(ascending).paginate(page, per_page=per_page,
-                                                    error_out=False))
+        comments_query.order_by(Comment.timestamp.asc()).paginate(page,
+                                                                  per_page=per_page,
+                                                                  error_out=False))
     comments = pagination.items
 
     headers = {
@@ -165,4 +165,8 @@ def unsubscribe(token):
     talk, email = Talk.unsubscribe_user(token)
     if not talk or not email:
         flash('Invalid ubsubscribe token.', category='danger')
-        return redirect('{}#top'.format(url_for('.talk', id=talk.id)))
+        return redirect('{}#top'.format(url_for('talks.index')))
+    PendingEmail.remove(email)
+    flash('You will not receive any more email notifications about this talk.',
+          category='info')
+    return redirect(url_for('talks.talk', id=talk.id))

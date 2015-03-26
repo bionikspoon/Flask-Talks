@@ -102,5 +102,5 @@ crashlytics.properties
 crashlytics-build.properties
 
 *.out
-*.sqlite
+*.sqlite*
 .env

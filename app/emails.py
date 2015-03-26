@@ -41,7 +41,7 @@ def start_email_thread():
     if not current_app.config['TESTING']:
         global _email_thread
         if _email_thread is None:
-            print "Starting email thread..."
+            print ("Starting email thread...")
             # noinspection PyProtectedMember
             _email_thread = Thread(target=flush_pending,
                                    args=[current_app._get_current_object()])

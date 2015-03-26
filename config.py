@@ -16,6 +16,7 @@ class Config(object):
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_SENDER') or 'admin@app.local'
     MAIL_FLUSH_INTERVAL = 3600  # one hour
+    MAIL_ERROR_RECIPIENT = os.environ.get('MAIL_ERROR_RECIPIENT')
 
 
 class DevelopmentConfig(Config):
@@ -30,14 +31,12 @@ class DevelopmentConfig(Config):
     MAIL_PORT = 25
     MAIL_USE_TLS = False
     MAIL_DEBUG = True
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_SENDER') or 'admin@app.local'
     MAIL_FLUSH_INTERVAL = 60  # one minute
 
 
 class TestingConfig(Config):
     TESTING = True
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'secret'
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         'TEST_DATABASE_URL') or 'sqlite:///{}'.format(
         os.path.join(basedir, 'test-dev.sqlite'))
