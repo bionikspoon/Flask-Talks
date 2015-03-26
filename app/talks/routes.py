@@ -47,9 +47,9 @@ def profile():
 def new_talk():
     form = TalkForm()
     if form.validate_on_submit():
-        talk_ = Talk(author=current_user)
-        form.to_model(talk_)
-        db.session.add(talk_)
+        talk = Talk(author=current_user)
+        form.to_model(talk)
+        db.session.add(talk)
         db.session.commit()
         flash('The talk was added successfully.', category='success')
         return redirect(url_for('.index'))
@@ -81,7 +81,11 @@ def talk(id):
             flash('Your comment will be published after '
                   'it is review by the presenter.', category='info')
         return redirect('{}#top'.format(url_for('.talk', id=talk.id)))
-    comments = talk.comments.order_by(Comment.timestamp.asc()).all()
+    if talk.author == current_user or current_user.is_authenticated() and current_user.is_admin:
+        comments_query = talk.comments
+    else:
+        comments_query = talk.approved_comments()
+    comments = comments_query.order_by(Comment.timestamp.asc()).all()
     headers = {
         'X-XSS-Protection': '0'} if current_user.is_authenticated() else {}
     return render_template('talks/talk.html', talk=talk, form=form,
@@ -103,3 +107,20 @@ def edit_talk(id):
         return redirect(url_for('.talk', id=talk.id))
     form.from_model(talk)
     return render_template('talks/edit_talk.html', form=form)
+
+
+@talks.route('/moderate')
+@login_required
+def moderate():
+    comments = current_user.for_moderation().order_by(Comment.timestamp.asc())
+    return render_template('talks/moderate.html', comments=comments)
+
+
+@talks.route('/moderate-admin')
+@login_required
+def moderate_admin():
+    if not current_user.is_admin:
+        abort(403)
+    comments = Comment.for_moderation().order_by(Comment.timestamp.asc())
+    return render_template('talks/moderate.html', comments=comments)
+

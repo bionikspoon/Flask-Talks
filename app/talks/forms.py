@@ -48,8 +48,10 @@ class PresenterCommentForm(Form):
     submit = SubmitField('Submit')
 
 
-class CommentForm(PresenterCommentForm):
+class CommentForm(Form):
     name = StringField('Name', validators=[Required(), Length(1, 64)])
     email = StringField('Email',
                         validators=[Required(), Length(1, 64), Email()])
+    body = PageDownField('Comment', validators=[Required()])
     notify = BooleanField('Notify when new comments are posted', default=True)
+    submit = SubmitField('Submit')

@@ -88,3 +88,7 @@ ul.comment-list li.comment:nth-child(odd) {
 ul.comment-list li.comment:nth-child(even) {
     background-color: #ffffff;
 }
+
+.badge-red {
+    background-color: #dd4444;
+}
