@@ -23,6 +23,7 @@ def index():
 
 @talks.route('/user/<username>')
 def user(username):
+    # noinspection PyShadowingNames
     user = User.query.filter_by(username=username).first_or_404()
     page = request.args.get('page', 1, type=int)
     per_page = current_app.config['TALKS_PER_PAGE']
@@ -60,6 +61,7 @@ def profile():
 def new_talk():
     form = TalkForm()
     if form.validate_on_submit():
+        # noinspection PyShadowingNames
         talk = Talk(author=current_user)
         form.to_model(talk)
         db.session.add(talk)
@@ -69,8 +71,10 @@ def new_talk():
     return render_template('talks/edit_talk.html', form=form)
 
 
+# noinspection PyShadowingBuiltins
 @talks.route('/talk/<int:id>', methods=['GET', 'POST'])
 def talk(id):
+    # noinspection PyShadowingNames
     talk = Talk.query.get_or_404(id)
     comment = None
     if current_user.is_authenticated():
@@ -94,17 +98,20 @@ def talk(id):
             flash('Your comment will be published after '
                   'it is review by the presenter.', category='info')
         return redirect('{}#top'.format(url_for('.talk', id=talk.id)))
-    if talk.author == current_user or current_user.is_authenticated() and current_user.is_admin:
+    comment_moderator = (
+        talk.author == current_user,
+        (current_user.is_authenticated() and current_user.is_admin))
+    if any(comment_moderator):
         comments_query = talk.comments
     else:
         comments_query = talk.approved_comments()
 
     page = request.args.get('page', 1, type=int)
     per_page = current_app.config['COMMENTS_PER_PAGE']
+    ascending = Comment.timestamp.asc()
     pagination = (
-        comments_query.order_by(Comment.timestamp.asc()).paginate(page,
-                                                                  per_page=per_page,
-                                                                  error_out=False))
+        comments_query.order_by(ascending).paginate(page, per_page=per_page,
+                                                    error_out=False))
     comments = pagination.items
 
     headers = {
@@ -114,9 +121,11 @@ def talk(id):
                            pagination=pagination), 200, headers
 
 
+# noinspection PyShadowingBuiltins
 @talks.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_talk(id):
+    # noinspection PyShadowingNames
     talk = Talk.query.get_or_404(id)
     if not current_user.is_admin and talk.author != current_user:
         abort(403)
@@ -145,4 +154,3 @@ def moderate_admin():
         abort(403)
     comments = Comment.for_moderation().order_by(Comment.timestamp.asc())
     return render_template('talks/moderate.html', comments=comments)
-

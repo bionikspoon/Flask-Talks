@@ -7,10 +7,13 @@ from .. import db
 from ..models import Comment
 
 
+# noinspection PyShadowingBuiltins
 @api.route('/comments/<int:id>', methods=['PUT'])
 def approve_comment(id):
     comment = Comment.query.get_or_404(id)
-    if not comment.talk.author == g.current_user and not g.current_user.is_admin:
+    can_modify_requirements = (
+        not comment.talk.author == g.current_user, not g.current_user.is_admin)
+    if all(can_modify_requirements):
         return forbidden('You cannot modify this comment.')
     if comment.approved:
         return bad_request('Comment is already approved.')
@@ -20,6 +23,7 @@ def approve_comment(id):
     return jsonify(dict(status='ok'))
 
 
+# noinspection PyShadowingBuiltins
 @api.route('/comments/<int:id>', methods=['DELETE'])
 def delete_comment(id):
     comment = Comment.query.get_or_404(id)

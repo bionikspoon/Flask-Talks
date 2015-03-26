@@ -3,7 +3,7 @@ from flask.ext.wtf import Form
 from flask.ext.pagedown.fields import PageDownField
 from wtforms import StringField, TextAreaField, SubmitField, BooleanField
 from wtforms.fields.html5 import DateField
-from wtforms.validators import Optional, Length, Required, URL, Email
+from wtforms.validators import Optional, Length, DataRequired, URL, Email
 
 
 class ProfileForm(Form):
@@ -14,11 +14,11 @@ class ProfileForm(Form):
 
 
 class TalkForm(Form):
-    title = StringField('Title', validators=[Required(), Length(1, 128)])
+    title = StringField('Title', validators=[DataRequired(), Length(1, 128)])
     description = TextAreaField('Description')
     slides = StringField('Slides Embed Code (450 pixels wide)')
     video = StringField('Video Embed Code (450 pixels wide)')
-    venue = StringField('Venue', validators=[Required(), Length(1, 128)])
+    venue = StringField('Venue', validators=[DataRequired(), Length(1, 128)])
     venue_url = StringField('Venue URL',
                             validators=[Optional(), Length(1, 128), URL()])
     date = DateField('Date')
@@ -44,14 +44,14 @@ class TalkForm(Form):
 
 
 class PresenterCommentForm(Form):
-    body = PageDownField('Comment', validators=[Required()])
+    body = PageDownField('Comment', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
 
 class CommentForm(Form):
-    name = StringField('Name', validators=[Required(), Length(1, 64)])
+    name = StringField('Name', validators=[DataRequired(), Length(1, 64)])
     email = StringField('Email',
-                        validators=[Required(), Length(1, 64), Email()])
-    body = PageDownField('Comment', validators=[Required()])
+                        validators=[DataRequired(), Length(1, 64), Email()])
+    body = PageDownField('Comment', validators=[DataRequired()])
     notify = BooleanField('Notify when new comments are posted', default=True)
     submit = SubmitField('Submit')

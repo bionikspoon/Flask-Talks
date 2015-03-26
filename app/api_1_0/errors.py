@@ -11,7 +11,7 @@ def bad_request(message):
 
 
 def unauthorized(message):
-    response = jsonify(dict(status='unauthorize', message=message))
+    response = jsonify(dict(status='unauthorized', message=message))
     response.status_code = 401
     return response
 
@@ -29,5 +29,5 @@ def not_found(message):
 
 
 @api.errorhandler(404)
-def not_found_handler(e):
+def not_found_handler(_):
     return not_found('resource not found')
