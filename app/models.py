@@ -57,7 +57,6 @@ class User(UserMixin, db.Model):
         return url_template.format(gravatar_url=url, hash=email_hash, size=size,
                                    default=default, rating=rating)
 
-
     def for_moderation(self, admin=False):
         if admin and self.is_admin:
             return Comment.for_moderation()
@@ -119,8 +118,9 @@ class Comment(db.Model):
     approved = db.Column(db.Boolean, default=False)
     talk_id = db.Column(db.Integer, db.ForeignKey('talks.id'))
 
+    # noinspection PyUnusedLocal
     @staticmethod
-    def on_changed_body(target, value, oldvalue, initiator):
+    def on_changed_body(target, value, old_value, initiator):
         allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code', 'em',
                         'i', 'li', 'ol', 'pre', 'strong', 'ul', 'h1', 'h2',
                         'h3', 'p']
@@ -130,7 +130,7 @@ class Comment(db.Model):
 
     @staticmethod
     def for_moderation():
-        return Comment.query.filter(Comment.approved is False)
+        return Comment.query.filter(Comment.approved == 0)
 
 
 db.event.listen(Comment.body, 'set', Comment.on_changed_body)

@@ -3,9 +3,9 @@
     var talks_api_token = "{{ current_user.get_api_token() | safe }}";
     function talks_api(url, method, data, success, error) {
         if (!data)
-            data = {}
+            data = {};
         data.token = talks_api_token;
-        req_url = location.protocol + '//' + location.host + '/api/1.0' + url
+        var req_url = location.protocol + '//' + location.host + '/api/1.0' + url;
         $.ajax({
             url: req_url,
             type: method,
@@ -16,8 +16,7 @@
         });
     }
     $('.api-approve').click(function() {
-        id = $(this).data('id');
-        url = location.protocol + '//' + location.host + '/api/1.0/comments/' + id
+        var id = $(this).data('id');
         talks_api('/comments/' + id, 'PUT', {}, function() {
             $('#moderate-' + id).hide();
             $('#approved-' + id).show();
@@ -28,8 +27,7 @@
         return false;
     });
     $('.api-delete').click(function() {
-        id = $(this).data('id');
-        url = location.protocol + '//' + location.host + '/api/1.0/comments/' + id
+        var id = $(this).data('id');
         talks_api('/comments/' + id, 'DELETE', {}, function() {
             $('#moderate-' + id).hide();
             $('#deleted-' + id).show();
