@@ -18,7 +18,7 @@ li.talk {
     padding: 10px;
 }
 
-li.talk-hover {
+li.talk:hover {
     background-color: #f8f8f8;
 }
 

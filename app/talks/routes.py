@@ -1,5 +1,5 @@
 # coding=utf-8
-from flask import render_template, flash, redirect, url_for
+from flask import render_template, flash, redirect, url_for, abort
 from flask.ext.login import login_required, current_user
 
 from . import talks
@@ -16,9 +16,9 @@ def index():
 
 @talks.route('/user/<username>')
 def user(username):
-    user_ = User.query.filter_by(username=username).first_or_404()
-    talk_list = user_.talks.order_by(Talk.date.desc()).all()
-    return render_template('talks/user.html', user=user_, talks=talk_list)
+    user = User.query.filter_by(username=username).first_or_404()
+    talk_list = user.talks.order_by(Talk.date.desc()).all()
+    return render_template('talks/user.html', user=user, talks=talk_list)
 
 
 @talks.route('/profile', methods=['GET', 'POST'])
@@ -29,6 +29,7 @@ def profile():
         current_user.name = form.name.data
         current_user.location = form.location.data
         current_user.bio = form.bio.data
+        # noinspection PyProtectedMember
         db.session.add(current_user._get_current_object())
         db.session.commit()
 
@@ -46,17 +47,35 @@ def profile():
 def new_talk():
     form = TalkForm()
     if form.validate_on_submit():
-        talk = Talk(title=form.title.data, description=form.description.data,
-                    slides=form.slides.data, video=form.video.data,
-                    venue=form.venue.data, venue_url=form.venue_url.data,
-                    date=form.date.data, author=current_user)
-        db.session.add(talk)
+        talk_ = Talk(author=current_user)
+        form.to_model(talk_)
+        db.session.add(talk_)
         db.session.commit()
         flash('The talk was added successfully.', category='success')
         return redirect(url_for('.index'))
     return render_template('talks/edit_talk.html', form=form)
 
-@talks.route('/talk/<int:id>')
+
+@talks.route('/talk/<id>')
 def talk(id):
     talk = Talk.query.get_or_404(id)
-    return render_template('talks/talk.html', talk=talk)
+    headers = {
+        'X-XSS-Protection': '0'} if current_user.is_authenticated() else {}
+    return render_template('talks/talk.html', talk=talk), 200, headers
+
+
+@talks.route('/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_talk(id):
+    talk = Talk.query.get_or_404(id)
+    if not current_user.is_admin and talk.author != current_user:
+        abort(403)
+    form = TalkForm()
+    if form.validate_on_submit():
+        form.to_model(talk)
+        db.session.add(talk)
+        db.session.commit()
+        flash('The talk was updated successfully.', category='success')
+        return redirect(url_for('.talk', id=talk.id))
+    form.from_model(talk)
+    return render_template('talks/edit_talk.html', form=form)
